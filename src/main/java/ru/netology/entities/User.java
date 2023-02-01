@@ -1,9 +1,7 @@
 package ru.netology.entities;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -14,5 +12,8 @@ public class User {
     private String login;
     private String passwordHash;
     private String authToken;
+
+    @OneToMany(mappedBy = "user")
+    private Set<File> files;
 
 }
