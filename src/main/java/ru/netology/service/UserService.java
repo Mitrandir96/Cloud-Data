@@ -14,7 +14,7 @@ public class UserService {
     }
 
     public String login(String login, String password) throws LoginException {
-        var optionalUser = userRepository.findUserByLoginAndPasswordHash(login, password);
+        var optionalUser = userRepository.findByLoginAndPasswordHash(login, password);
         if (!optionalUser.isPresent()) {
             throw new LoginException("Login and/or password is incorrect.");
         }
