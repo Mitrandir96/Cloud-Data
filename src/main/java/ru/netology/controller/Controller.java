@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.netology.dto.PostLoginRequest;
+import ru.netology.dto.PostLoginResponse;
 import ru.netology.service.UserService;
 
 import javax.security.auth.login.LoginException;
@@ -19,7 +20,7 @@ public class Controller {
     }
 
     @PostMapping("/login")
-    public String login(@RequestBody PostLoginRequest request) throws LoginException {
+    public PostLoginResponse login(@RequestBody PostLoginRequest request) throws LoginException {
         return userService.login(request.getLogin(), request.getPassword());
     }
 

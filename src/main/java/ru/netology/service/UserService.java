@@ -1,6 +1,7 @@
 package ru.netology.service;
 
 import org.springframework.stereotype.Service;
+import ru.netology.dto.PostLoginResponse;
 import ru.netology.repositories.UserRepository;
 
 import javax.security.auth.login.LoginException;
@@ -13,13 +14,16 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public String login(String login, String password) throws LoginException {
+    public PostLoginResponse login(String login, String password) throws LoginException {
         var optionalUser = userRepository.findByLoginAndPasswordHash(login, password);
         if (!optionalUser.isPresent()) {
             throw new LoginException("Login and/or password is incorrect.");
         }
         var user = optionalUser.get();
         user.setAuthToken("123");
-        return user.getAuthToken();
+        var postLoginResponse = new PostLoginResponse();
+        postLoginResponse.setAuthToken(user.getAuthToken());
+        return postLoginResponse;
+
     }
 }
