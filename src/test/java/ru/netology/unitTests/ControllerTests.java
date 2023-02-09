@@ -1,14 +1,11 @@
 package ru.netology.unitTests;
 
 import com.google.gson.Gson;
-import org.apache.commons.compress.utils.Lists;
 import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.netology.controller.Controller;
@@ -22,7 +19,7 @@ import javax.security.auth.login.LoginException;
 
 public class ControllerTests {
     @Test
-    public void login_ExistingUsers_returnsAuthTokenWith200() throws LoginException {
+    public void login_ExistingUser_returnsAuthTokenWith200_Test() throws LoginException {
         var postLoginResponse = new PostLoginResponse();
         var postLoginRequest = new PostLoginRequest();
         postLoginResponse.setAuthToken("auth-token");
@@ -41,7 +38,7 @@ public class ControllerTests {
     }
 
     @Test
-    public void onLoginError_returnsErrorIdAndMessageWith400() {
+    public void onLoginError_returnsErrorIdAndMessageWith400_Test() {
         var exception = new LoginException("login and/or password is incorrect");
         var exceptionHandler = new ExceptionHandlerAdvice();
         var gson = new Gson();
@@ -57,7 +54,7 @@ public class ControllerTests {
     }
 
     @Test
-    public void onValidationError_returnsErrorIdAndMessageWith400() {
+    public void onValidationError_returnsErrorIdAndMessageWith400_Test() {
         var exception = Mockito.mock(MethodArgumentNotValidException.class);
         var fieldError = Mockito.mock(FieldError.class);
         var exceptionMessage = "login can't be empty";
@@ -76,11 +73,6 @@ public class ControllerTests {
 
         Assert.assertEquals(expected, actual);
     }
-
-
-
-
-
 
 
 }
