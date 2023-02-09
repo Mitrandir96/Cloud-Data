@@ -1,5 +1,6 @@
 package ru.netology.controller;
 
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,7 +21,7 @@ public class Controller {
     }
 
     @PostMapping("/login")
-    public PostLoginResponse login(@RequestBody PostLoginRequest request) throws LoginException {
+    public PostLoginResponse login(@RequestBody @Validated PostLoginRequest request) throws LoginException {
         return userService.login(request.getLogin(), request.getPassword());
     }
 
