@@ -17,7 +17,7 @@ public class UserService {
     public PostLoginResponse login(String login, String password) throws LoginException {
         var optionalUser = userRepository.findByLoginAndPasswordHash(login, password);
         if (!optionalUser.isPresent()) {
-            throw new LoginException("Login and/or password is incorrect.");
+            throw new LoginException("login and/or password is incorrect");
         }
         var user = optionalUser.get();
         user.setAuthToken("123");
