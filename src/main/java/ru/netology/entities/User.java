@@ -9,8 +9,13 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     private int id;
+
+    @Column(unique = true)
     private String login;
+
     private String passwordHash;
+
+    @Column(unique = true)
     private String authToken;
 
     @OneToMany(mappedBy = "user")
