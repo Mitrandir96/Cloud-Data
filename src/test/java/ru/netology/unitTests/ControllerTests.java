@@ -19,22 +19,22 @@ import javax.security.auth.login.LoginException;
 
 public class ControllerTests {
     @Test
-    public void login_ExistingUser_returnsAuthTokenWith200_Test() throws LoginException {
+    public void login_existingUser_returnsAuthTokenWith200_Test() throws LoginException {
         var postLoginResponse = new PostLoginResponse();
         var postLoginRequest = new PostLoginRequest();
         postLoginResponse.setAuthToken("auth-token");
         postLoginRequest.setLogin("existingUser");
         postLoginRequest.setPassword("password");
-        var service = Mockito.mock(UserService.class);
-        var controller = new Controller(service);
+        var userService = Mockito.mock(UserService.class);
+        var controller = new Controller(userService);
 
-        Mockito.when(service.login(postLoginRequest.getLogin(), postLoginRequest.getPassword())).thenReturn(postLoginResponse);
+        Mockito.when(userService.login(postLoginRequest.getLogin(), postLoginRequest.getPassword())).thenReturn(postLoginResponse);
 
         var expected = postLoginResponse;
         var actual = controller.login(postLoginRequest);
 
         Assert.assertEquals(expected, actual);
-        Mockito.verify(service, Mockito.times(1)).login(postLoginRequest.getLogin(), postLoginRequest.getPassword());
+        Mockito.verify(userService, Mockito.times(1)).login(postLoginRequest.getLogin(), postLoginRequest.getPassword());
     }
 
     @Test
@@ -72,6 +72,17 @@ public class ControllerTests {
         var actual = exceptionHandler.onValidationError(exception);
 
         Assert.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void logout_Test() {
+        var authToken = "auth-token";
+        var userService = Mockito.mock(UserService.class);
+        var controller = new Controller(userService);
+
+        controller.logout(authToken);
+
+        Mockito.verify(userService, Mockito.times(1)).logout(authToken);
     }
 
 
