@@ -7,6 +7,7 @@ import ru.netology.repositories.FileRepository;
 import ru.netology.repositories.UserRepository;
 
 import javax.security.auth.login.LoginException;
+import javax.security.auth.message.AuthException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.UUID;
@@ -21,11 +22,11 @@ public class FileService {
         this.userRepository = userRepository;
     }
 
-    public void uploadFile(String authToken, String hash, MultipartFile file, String filename) throws IOException, LoginException {
+    public void uploadFile(String authToken, String hash, MultipartFile file, String filename) throws IOException, AuthException {
         var currentFile = new File();
         var optionalUser = userRepository.findUserByAuthToken(authToken);
         if (!optionalUser.isPresent()) {
-            throw new LoginException("User with provided auth token not found");
+            throw new AuthException("user with provided auth token not found");
         }
         var user = optionalUser.get();
         currentFile.setUser(user);
