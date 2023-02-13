@@ -26,7 +26,7 @@ public class ControllerTests {
         postLoginRequest.setLogin("existingUser");
         postLoginRequest.setPassword("password");
         var userService = Mockito.mock(UserService.class);
-        var controller = new Controller(userService);
+        var controller = new Controller(userService, null);
 
         Mockito.when(userService.login(postLoginRequest.getLogin(), postLoginRequest.getPassword())).thenReturn(postLoginResponse);
 
@@ -78,7 +78,7 @@ public class ControllerTests {
     public void logout_Test() {
         var authToken = "auth-token";
         var userService = Mockito.mock(UserService.class);
-        var controller = new Controller(userService);
+        var controller = new Controller(userService, null);
 
         controller.logout(authToken);
 
