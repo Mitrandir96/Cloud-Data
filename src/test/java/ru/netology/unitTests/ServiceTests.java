@@ -11,6 +11,8 @@ import ru.netology.service.UserService;
 import javax.security.auth.login.LoginException;
 import java.util.Optional;
 
+import static org.mockito.Mockito.never;
+
 public class ServiceTests {
     @Test
     public void login_existingUser_returnsPostLoginResponseWithAuthToken_Test() throws LoginException {
@@ -47,6 +49,38 @@ public class ServiceTests {
         Mockito.when(userRepository.findByLoginAndPasswordHash(login, password)).thenReturn(optionalUser);
 
         Assert.assertThrows(LoginException.class, () -> userService.login(login, password));
+    }
+
+    @Test
+    public void logout_existingUser_Test() {
+        var authToken = "auth-token";
+        var user = new User();
+        var optionalUser = Optional.of(user);
+        var userRepository = Mockito.mock(UserRepository.class);
+        var userService = new UserService(userRepository);
+
+        Mockito.when(userRepository.findUserByAuthToken(authToken)).thenReturn(optionalUser);
+
+        userService.logout(authToken);
+
+        Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
+        Mockito.verify(userRepository, Mockito.times(1)).save(user);
+    }
+
+    @Test
+    public void logout_notExistingUser_Test() {
+        var authToken = "auth-token";
+        var user = new User();
+        Optional<User> optionalUser = Optional.empty();
+        var userRepository = Mockito.mock(UserRepository.class);
+        var userService = new UserService(userRepository);
+
+        Mockito.when(userRepository.findUserByAuthToken(authToken)).thenReturn(optionalUser);
+
+        userService.logout(authToken);
+
+        Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
+        Mockito.verify(userRepository, never()).save(user);
     }
 
 }
