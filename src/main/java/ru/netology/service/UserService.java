@@ -2,8 +2,11 @@ package ru.netology.service;
 
 import org.springframework.stereotype.Service;
 import ru.netology.dto.PostLoginResponse;
+import ru.netology.entities.File;
+import ru.netology.repositories.FileRepository;
 import ru.netology.repositories.UserRepository;
 import javax.security.auth.login.LoginException;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -27,10 +30,10 @@ public class UserService {
         return postLoginResponse;
     }
 
-    public void logout(String authToken) throws LoginException {
+    public void logout(String authToken) {
         var optionalUser = userRepository.findUserByAuthToken(authToken);
         if (!optionalUser.isPresent()) {
-            throw new LoginException("User with provided auth token not found");
+            return;
         }
         var user = optionalUser.get();
         user.setAuthToken(null);
