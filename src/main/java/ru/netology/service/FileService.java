@@ -1,6 +1,8 @@
 package ru.netology.service;
 
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.multipart.MultipartFile;
 import ru.netology.entities.File;
 import ru.netology.repositories.FileRepository;
@@ -22,7 +24,7 @@ public class FileService {
         this.userRepository = userRepository;
     }
 
-    public void uploadFile(String authToken, String hash, MultipartFile file, String filename) throws IOException, AuthException {
+    public void uploadFile(String authToken, String hash, MultipartFile file, String filename) throws IOException, AuthException, IllegalArgumentException {
         var currentFile = new File();
         var optionalUser = userRepository.findUserByAuthToken(authToken);
         if (!optionalUser.isPresent()) {
@@ -31,9 +33,31 @@ public class FileService {
         var user = optionalUser.get();
         currentFile.setUser(user);
         currentFile.setId(UUID.randomUUID());
+        if (hash.isEmpty() || hash.isBlank()) {
+            throw new IllegalArgumentException("hash can't be empty");
+        }
+        if (hash == null) {
+            throw new IllegalArgumentException("hash can't be null");
+        }
         currentFile.setHash(hash);
+        if (filename.isEmpty() || filename.isBlank()) {
+            throw new IllegalArgumentException("filename is empty");
+        }
+        if (filename == null) {
+            throw new IllegalArgumentException("filename can't be null");
+        }
         currentFile.setName(filename);
-        currentFile.setContent(file.getBytes());
+        if (file == null) {
+            throw new IllegalArgumentException("file can't be null");
+        }
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("file can't be empty");
+        }
+        try {
+            currentFile.setContent(file.getBytes());
+        } catch (IOException e) {
+            throw new IOException("can't get file bytes");
+        }
         fileRepository.save(currentFile);
     }
 }
