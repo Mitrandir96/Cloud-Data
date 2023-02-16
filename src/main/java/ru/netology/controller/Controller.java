@@ -9,6 +9,7 @@ import ru.netology.service.FileService;
 import ru.netology.service.UserService;
 
 import javax.security.auth.login.LoginException;
+import javax.security.auth.message.AuthException;
 import java.io.IOException;
 
 @RestController
@@ -33,7 +34,7 @@ public class Controller {
     }
 
     @PostMapping("/file")
-    public void uploadFile(@RequestHeader("auth-token") String authToken, @RequestPart String hash, @RequestPart MultipartFile file, @RequestParam String filename) throws IOException, LoginException {
+    public void uploadFile(@RequestHeader("auth-token") String authToken, @RequestPart String hash, @RequestPart MultipartFile file, @RequestParam String filename) throws AuthException, IOException, IllegalArgumentException {
         fileService.uploadFile(authToken, hash, file, filename);
     }
 
