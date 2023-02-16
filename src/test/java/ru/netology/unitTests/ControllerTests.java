@@ -4,18 +4,23 @@ import com.google.gson.Gson;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.multipart.MultipartFile;
 import ru.netology.controller.Controller;
 import ru.netology.controller.exception.ExceptionHandlerAdvice;
 import ru.netology.dto.GeneralErrorResponse;
 import ru.netology.dto.PostLoginRequest;
 import ru.netology.dto.PostLoginResponse;
+import ru.netology.service.FileService;
 import ru.netology.service.UserService;
 
 import javax.security.auth.login.LoginException;
+import javax.security.auth.message.AuthException;
+import java.io.IOException;
 
 public class ControllerTests {
     @Test
@@ -69,7 +74,7 @@ public class ControllerTests {
         Mockito.when(fieldError.getDefaultMessage()).thenReturn(exceptionMessage);
 
         var expected = ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body(ex);
-        var actual = exceptionHandler.onValidationError(exception);
+        var actual = exceptionHandler.onLoginValidationError(exception);
 
         Assert.assertEquals(expected, actual);
     }
@@ -83,6 +88,74 @@ public class ControllerTests {
         controller.logout(authToken);
 
         Mockito.verify(userService, Mockito.times(1)).logout(authToken);
+    }
+
+    @Test
+    public void uploadFile_Test() throws LoginException, IOException, IllegalArgumentException {
+        var authToken = "auth-token";
+        var filename = "filename";
+        var hash = "hash";
+        var fileService = Mockito.mock(FileService.class);
+        var file = Mockito.mock(MultipartFile.class);
+        var controller = new Controller(null, fileService);
+
+        controller.uploadFile(authToken, hash, file, filename);
+
+        Mockito.verify(fileService, Mockito.times(1)).uploadFile(authToken, hash, file, filename);
+    }
+
+    @Test
+    public void authenticationError_returnsErrorIdAndMessageWith401_Test() {
+        var exception = new AuthException("user with provided auth token not found");
+        var status = HttpStatus.UNAUTHORIZED;
+        var exceptionHandler = new ExceptionHandlerAdvice();
+        var gson = new Gson();
+        var err = new GeneralErrorResponse();
+        err.setMessage(exception.getMessage());
+        err.setId(3);
+        var ex = gson.toJson(err);
+
+        var expected = ResponseEntity.status(status).contentType(MediaType.APPLICATION_JSON).body(ex);
+        var actual = exceptionHandler.authenticationError(exception);
+
+        Assert.assertEquals(expected, actual);
+        Assert.assertSame(expected.getClass(), actual.getClass());
+    }
+
+    @Test
+    public void onFileValidationError_returnsErrorIdAndMessageWith400_Test() {
+        var exception = new IllegalArgumentException("filename can`t be empty");
+        var status = HttpStatus.BAD_REQUEST;
+        var exceptionHandler = new ExceptionHandlerAdvice();
+        var gson = new Gson();
+        var err = new GeneralErrorResponse();
+        err.setMessage(exception.getMessage());
+        err.setId(4);
+        var ex = gson.toJson(err);
+
+        var expected = ResponseEntity.status(status).contentType(MediaType.APPLICATION_JSON).body(ex);
+        var actual = exceptionHandler.onFileValidationError(exception);
+
+        Assert.assertEquals(expected, actual);
+        Assert.assertSame(expected.getClass(), actual.getClass());
+    }
+
+    @Test
+    public void getFileBytesError_returnsErrorIdAndMessageWith400_Test() {
+        var exception = new IOException("can`t get file bytes");
+        var status = HttpStatus.BAD_REQUEST;
+        var exceptionHandler = new ExceptionHandlerAdvice();
+        var gson = new Gson();
+        var err = new GeneralErrorResponse();
+        err.setMessage(exception.getMessage());
+        err.setId(5);
+        var ex = gson.toJson(err);
+
+        var expected = ResponseEntity.status(status).contentType(MediaType.APPLICATION_JSON).body(ex);
+        var actual = exceptionHandler.getFileBytesError(exception);
+
+        Assert.assertEquals(expected, actual);
+        Assert.assertSame(expected.getClass(), actual.getClass());
     }
 
 
