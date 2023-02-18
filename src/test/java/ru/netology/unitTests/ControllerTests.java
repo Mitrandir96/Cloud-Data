@@ -158,5 +158,17 @@ public class ControllerTests {
         Assert.assertSame(expected.getClass(), actual.getClass());
     }
 
+    @Test
+    public void deleteFile_Test() throws AuthException {
+        var authToken = "auth-token";
+        var filename = "filename";
+        var fileService = Mockito.mock(FileService.class);
+        var controller = new Controller(null, fileService);
+
+        controller.deleteFile(authToken, filename);
+
+        Mockito.verify(fileService, Mockito.times(1)).deleteFile(authToken, filename);
+    }
+
 
 }
