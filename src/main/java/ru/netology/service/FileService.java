@@ -46,6 +46,10 @@ public class FileService {
         if (filename == null) {
             throw new IllegalArgumentException("filename can't be null");
         }
+        var optionalFile = fileRepository.findFileByNameAndUser(filename, user);
+        if (optionalFile.isPresent()) {
+            throw new IllegalArgumentException("file with provided filename already exists");
+        }
         currentFile.setName(filename);
         if (file == null) {
             throw new IllegalArgumentException("file can't be null");
