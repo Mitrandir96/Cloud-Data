@@ -3,6 +3,7 @@ package ru.netology.unitTests;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartRequest;
@@ -189,6 +190,85 @@ public class ServiceTests {
         Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
         Mockito.verify(fileRepository, never()).save(Mockito.notNull());
         Mockito.verify(fileRepository, Mockito.times(1)).findFileByNameAndUser(filename, user);
+    }
+
+    @Test
+    public void deleteFile_existingFile_Test() throws AuthException {
+        var authToken = "auth-token";
+        var filename = "existingFilename";
+        var user = new User();
+        var file = new File();
+        var optionalFile = Optional.of(file);
+        var optionalUser = Optional.of(user);
+        var fileRepository = Mockito.mock(FileRepository.class);
+        var userRepository = Mockito.mock(UserRepository.class);
+        var fileService = new FileService(fileRepository, userRepository);
+
+        Mockito.when(userRepository.findUserByAuthToken(authToken)).thenReturn(optionalUser);
+        Mockito.when(fileRepository.findFileByNameAndUser(filename, user)).thenReturn(optionalFile);
+
+        fileService.deleteFile(authToken, filename);
+
+        Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
+        Mockito.verify(fileRepository, Mockito.times(1)).findFileByNameAndUser(filename, user);
+        Mockito.verify(fileRepository, Mockito.times(1)).delete(file);
+    }
+
+    @Test
+    public void deleteFile_notExistingFile_throwsIllegalException_Test() {
+        var authToken = "auth-token";
+        var filename = "existingFilename";
+        var user = new User();
+        Optional<File> optionalFile = Optional.empty();
+        var optionalUser = Optional.of(user);
+        var fileRepository = Mockito.mock(FileRepository.class);
+        var userRepository = Mockito.mock(UserRepository.class);
+        var fileService = new FileService(fileRepository, userRepository);
+
+        Mockito.when(userRepository.findUserByAuthToken(authToken)).thenReturn(optionalUser);
+        Mockito.when(fileRepository.findFileByNameAndUser(filename, user)).thenReturn(optionalFile);
+
+        Assert.assertThrows(IllegalArgumentException.class, () -> fileService.deleteFile(authToken, filename));
+        Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
+        Mockito.verify(fileRepository, Mockito.times(1)).findFileByNameAndUser(filename, user);
+        Mockito.verify(fileRepository, never()).delete(Mockito.notNull());
+    }
+
+    @Test
+    public void deleteFile_notExistingUser_throwsAuthException_Test() {
+        var authToken = "auth-token";
+        var filename = "existingFilename";
+        Optional<User> optionalUser = Optional.empty();
+        var fileRepository = Mockito.mock(FileRepository.class);
+        var userRepository = Mockito.mock(UserRepository.class);
+        var fileService = new FileService(fileRepository, userRepository);
+
+        Mockito.when(userRepository.findUserByAuthToken(authToken)).thenReturn(optionalUser);
+
+        Assert.assertThrows(AuthException.class, () -> fileService.deleteFile(authToken, filename));
+        Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
+        Mockito.verify(fileRepository, never()).findFileByNameAndUser(Mockito.notNull(), Mockito.notNull());
+        Mockito.verify(fileRepository, never()).delete(Mockito.notNull());
+    }
+
+    @Test
+    public void deleteFile_EmptyFilename_throwsIllegalException_Test() {
+        var authToken = "auth-token";
+        var filename = "";
+        var user = new User();
+        Optional<File> optionalFile = Optional.empty();
+        var optionalUser = Optional.of(user);
+        var fileRepository = Mockito.mock(FileRepository.class);
+        var userRepository = Mockito.mock(UserRepository.class);
+        var fileService = new FileService(fileRepository, userRepository);
+
+        Mockito.when(userRepository.findUserByAuthToken(authToken)).thenReturn(optionalUser);
+        Mockito.when(fileRepository.findFileByNameAndUser(filename, user)).thenReturn(optionalFile);
+
+        Assert.assertThrows(IllegalArgumentException.class, () -> fileService.deleteFile(authToken, filename));
+        Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
+        Mockito.verify(fileRepository, never()).findFileByNameAndUser(filename, user);
+        Mockito.verify(fileRepository, never()).delete(Mockito.notNull());
     }
 
 }
