@@ -24,7 +24,7 @@ public class FileService {
         this.userRepository = userRepository;
     }
 
-    public void uploadFile(String authToken, String hash, MultipartFile file, String filename) throws IOException, AuthException, IllegalArgumentException {
+    public void uploadFile(String authToken, String hash, MultipartFile file, String filename) throws IOException, AuthException {
         var currentFile = new File();
         var optionalUser = userRepository.findUserByAuthToken(authToken);
         if (!optionalUser.isPresent()) {
@@ -63,5 +63,25 @@ public class FileService {
             throw new IOException("can't get file bytes");
         }
         fileRepository.save(currentFile);
+    }
+
+    public void deleteFile(String authToken, String filename) throws AuthException {
+        var optionalUser = userRepository.findUserByAuthToken(authToken);
+        if (!optionalUser.isPresent()) {
+            throw new AuthException("user with provided auth token not found");
+        }
+        var user = optionalUser.get();
+        if (filename.isEmpty() || filename.isBlank()) {
+            throw new IllegalArgumentException("filename is empty");
+        }
+        if (filename == null) {
+            throw new IllegalArgumentException("filename can't be null");
+        }
+        var optionalFile = fileRepository.findFileByNameAndUser(filename, user);
+        if (!optionalFile.isPresent()) {
+            throw new IllegalArgumentException("file with provided filename not found");
+        }
+        var file = optionalFile.get();
+        fileRepository.delete(file);
     }
 }
