@@ -38,7 +38,7 @@ public class Controller {
         fileService.uploadFile(authToken, hash, file, filename);
     }
 
-    @DeleteMapping ("/delete")
+    @DeleteMapping ("/file")
     public void deleteFile(@RequestHeader("auth-token") String authToken, @RequestParam String filename) throws AuthException {
         fileService.deleteFile(authToken, filename);
     }
