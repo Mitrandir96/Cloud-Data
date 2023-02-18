@@ -19,7 +19,7 @@ public class UserService {
 
     public PostLoginResponse login(String login, String password) throws LoginException {
         var optionalUser = userRepository.findByLoginAndPasswordHash(login, password);
-        if (!optionalUser.isPresent()) {
+        if (optionalUser.isEmpty()) {
             throw new LoginException("login and/or password is incorrect");
         }
         var user = optionalUser.get();
@@ -32,7 +32,7 @@ public class UserService {
 
     public void logout(String authToken) {
         var optionalUser = userRepository.findUserByAuthToken(authToken);
-        if (!optionalUser.isPresent()) {
+        if (optionalUser.isEmpty()) {
             return;
         }
         var user = optionalUser.get();
