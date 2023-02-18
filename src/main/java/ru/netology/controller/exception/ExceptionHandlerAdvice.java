@@ -12,6 +12,7 @@ import ru.netology.dto.GeneralErrorResponse;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.message.AuthException;
 import java.io.IOException;
+import java.util.NoSuchElementException;
 
 @RestControllerAdvice
 public class ExceptionHandlerAdvice {
@@ -38,6 +39,11 @@ public class ExceptionHandlerAdvice {
     @ExceptionHandler(IOException.class)
     public ResponseEntity<String> getFileBytesError(IOException e) {
         return prepareResponseEntity(e.getMessage(), 5, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<String> getFileFromRepository(NoSuchElementException e) {
+        return prepareResponseEntity(e.getMessage(), 6, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     private ResponseEntity<String> prepareResponseEntity(String message, int id, HttpStatus status) {
