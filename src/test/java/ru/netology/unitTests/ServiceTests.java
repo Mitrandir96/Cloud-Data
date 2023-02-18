@@ -168,4 +168,27 @@ public class ServiceTests {
         Mockito.verify(fileRepository, never()).save(Mockito.notNull());
     }
 
+    @Test
+    public void uploadFile_WithExistingName_throwsIllegalException_Test() {
+        var authToken = "auth-token";
+        var filename = "existingFilename";
+        var hash = "hash";
+        var currentFile = Mockito.mock(MultipartFile.class);
+        var user = new User();
+        var file = new File();
+        var optionalFile = Optional.of(file);
+        var optionalUser = Optional.of(user);
+        var fileRepository = Mockito.mock(FileRepository.class);
+        var userRepository = Mockito.mock(UserRepository.class);
+        var fileService = new FileService(fileRepository, userRepository);
+
+        Mockito.when(userRepository.findUserByAuthToken(authToken)).thenReturn(optionalUser);
+        Mockito.when(fileRepository.findFileByNameAndUser(filename, user)).thenReturn(optionalFile);
+
+        Assert.assertThrows(IllegalArgumentException.class, () -> fileService.uploadFile(authToken, hash, currentFile, filename));
+        Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
+        Mockito.verify(fileRepository, never()).save(Mockito.notNull());
+        Mockito.verify(fileRepository, Mockito.times(1)).findFileByNameAndUser(filename, user);
+    }
+
 }
