@@ -21,6 +21,7 @@ import ru.netology.service.UserService;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.message.AuthException;
 import java.io.IOException;
+import java.util.NoSuchElementException;
 
 public class ControllerTests {
     @Test
@@ -168,6 +169,24 @@ public class ControllerTests {
         controller.deleteFile(authToken, filename);
 
         Mockito.verify(fileService, Mockito.times(1)).deleteFile(authToken, filename);
+    }
+
+    @Test
+    public void getFileFromRepository_returnsErrorIdAndMessageWith500_Test() {
+        var exception = new NoSuchElementException("file with provided filename not found");
+        var status = HttpStatus.INTERNAL_SERVER_ERROR;
+        var exceptionHandler = new ExceptionHandlerAdvice();
+        var gson = new Gson();
+        var err = new GeneralErrorResponse();
+        err.setMessage(exception.getMessage());
+        err.setId(6);
+        var ex = gson.toJson(err);
+
+        var expected = ResponseEntity.status(status).contentType(MediaType.APPLICATION_JSON).body(ex);
+        var actual = exceptionHandler.getFileFromRepository(exception);
+
+        Assert.assertEquals(expected, actual);
+        Assert.assertSame(expected.getClass(), actual.getClass());
     }
 
 
