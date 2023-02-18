@@ -18,6 +18,7 @@ import ru.netology.service.UserService;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.message.AuthException;
 import java.io.IOException;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.mockito.Mockito.never;
@@ -215,7 +216,7 @@ public class ServiceTests {
     }
 
     @Test
-    public void deleteFile_notExistingFile_throwsIllegalException_Test() {
+    public void deleteFile_notExistingFile_throwsNoSuchElementException_Test() {
         var authToken = "auth-token";
         var filename = "existingFilename";
         var user = new User();
@@ -228,7 +229,7 @@ public class ServiceTests {
         Mockito.when(userRepository.findUserByAuthToken(authToken)).thenReturn(optionalUser);
         Mockito.when(fileRepository.findFileByNameAndUser(filename, user)).thenReturn(optionalFile);
 
-        Assert.assertThrows(IllegalArgumentException.class, () -> fileService.deleteFile(authToken, filename));
+        Assert.assertThrows(NoSuchElementException.class, () -> fileService.deleteFile(authToken, filename));
         Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
         Mockito.verify(fileRepository, Mockito.times(1)).findFileByNameAndUser(filename, user);
         Mockito.verify(fileRepository, never()).delete(Mockito.notNull());
