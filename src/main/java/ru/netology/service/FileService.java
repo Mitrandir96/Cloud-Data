@@ -1,6 +1,7 @@
 package ru.netology.service;
 
 import org.hibernate.Hibernate;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,6 +13,7 @@ import javax.security.auth.login.LoginException;
 import javax.security.auth.message.AuthException;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 @Service
 public class FileService {
@@ -67,7 +69,7 @@ public class FileService {
 
     public void deleteFile(String authToken, String filename) throws AuthException {
         var optionalUser = userRepository.findUserByAuthToken(authToken);
-        if (!optionalUser.isPresent()) {
+        if (optionalUser.isEmpty()) {
             throw new AuthException("user with provided auth token not found");
         }
         var user = optionalUser.get();
@@ -78,8 +80,8 @@ public class FileService {
             throw new IllegalArgumentException("filename can't be null");
         }
         var optionalFile = fileRepository.findFileByNameAndUser(filename, user);
-        if (!optionalFile.isPresent()) {
-            throw new IllegalArgumentException("file with provided filename not found");
+        if (optionalFile.isEmpty()) {
+            throw new NoSuchElementException("file with provided filename not found");
         }
         var file = optionalFile.get();
         fileRepository.delete(file);
