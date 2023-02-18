@@ -34,8 +34,13 @@ public class Controller {
     }
 
     @PostMapping("/file")
-    public void uploadFile(@RequestHeader("auth-token") String authToken, @RequestPart String hash, @RequestPart MultipartFile file, @RequestParam String filename) throws AuthException, IOException, IllegalArgumentException {
+    public void uploadFile(@RequestHeader("auth-token") String authToken, @RequestPart String hash, @RequestPart MultipartFile file, @RequestParam String filename) throws AuthException, IOException {
         fileService.uploadFile(authToken, hash, file, filename);
+    }
+
+    @DeleteMapping ("/delete")
+    public void deleteFile(@RequestHeader("auth-token") String authToken, @RequestParam String filename) throws AuthException {
+        fileService.deleteFile(authToken, filename);
     }
 
 }
