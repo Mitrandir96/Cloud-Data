@@ -7,6 +7,7 @@ import org.mockito.Mockito;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.multipart.MultipartFile;
@@ -187,6 +188,25 @@ public class ControllerTests {
 
         Assert.assertEquals(expected, actual);
         Assert.assertSame(expected.getClass(), actual.getClass());
+    }
+
+    @Test
+    public void getFile_existingFile_returnsHashAndContentWith200_Test() throws AuthException {
+        var authToken = "auth-token";
+        var filename = "existingFilename";
+        var fileService = Mockito.mock(FileService.class);
+        var controller = new Controller(null, fileService);
+        var formData = new LinkedMultiValueMap<String, Object>();
+        formData.add("hash", "123");
+        formData.add("file", 123);
+
+        Mockito.when(fileService.getFile(authToken, filename)).thenReturn(ResponseEntity.status(HttpStatus.OK).contentType(MediaType.MULTIPART_FORM_DATA).body(formData));
+
+        var expected = ResponseEntity.status(HttpStatus.OK).contentType(MediaType.MULTIPART_FORM_DATA).body(formData);
+        var actual = controller.getFile(authToken, filename);
+
+        Assert.assertEquals(expected, actual);
+        Mockito.verify(fileService, Mockito.times(1)).getFile(authToken, filename);
     }
 
 
