@@ -4,7 +4,11 @@ import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartRequest;
 import ru.netology.dto.PostLoginResponse;
@@ -271,5 +275,87 @@ public class ServiceTests {
         Mockito.verify(fileRepository, never()).findFileByNameAndUser(filename, user);
         Mockito.verify(fileRepository, never()).delete(Mockito.notNull());
     }
+
+    @Test
+    public void getFile_existingFile_returnsHashAndСontent_Test() throws AuthException {
+        var authToken = "auth-token";
+        var filename = "existingFilename";
+        var user = new User();
+        var file = new File();
+        var optionalFile = Optional.of(file);
+        var optionalUser = Optional.of(user);
+        var fileRepository = Mockito.mock(FileRepository.class);
+        var userRepository = Mockito.mock(UserRepository.class);
+        var fileService = new FileService(fileRepository, userRepository);
+        var formData = new LinkedMultiValueMap<String, Object>();
+        var currentFile = optionalFile.get();
+        formData.add("hash", currentFile.getHash());
+        formData.add("file", currentFile.getContent());
+
+        Mockito.when(userRepository.findUserByAuthToken(authToken)).thenReturn(optionalUser);
+        Mockito.when(fileRepository.findFileByNameAndUser(filename, user)).thenReturn(optionalFile);
+
+        var expected = ResponseEntity.status(HttpStatus.OK).contentType(MediaType.MULTIPART_FORM_DATA).body(formData);
+        var actual = fileService.getFile(authToken, filename);
+
+        Assert.assertEquals(expected, actual);
+        Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
+        Mockito.verify(fileRepository, Mockito.times(1)).findFileByNameAndUser(filename, user);
+    }
+
+    @Test
+    public void getFile_notExistingUser_throwsAuthException_Test() {
+        var authToken = "auth-token";
+        var filename = "filename";
+        var fileRepository = Mockito.mock(FileRepository.class);
+        var userRepository = Mockito.mock(UserRepository.class);
+        var fileService = new FileService(fileRepository, userRepository);
+        Optional<User> optionalUser = Optional.empty();
+
+        Mockito.when(userRepository.findUserByAuthToken(authToken)).thenReturn(optionalUser);
+
+        Assert.assertThrows(AuthException.class, () -> fileService.getFile(authToken, filename));
+        Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
+        Mockito.verify(fileRepository, never()).findFileByNameAndUser(Mockito.notNull(), Mockito.notNull());
+    }
+
+    @Test
+    public void getFile_EmptyFilename_throwsIllegalException_Test() {
+        var authToken = "auth-token";
+        var filename = "";
+        var fileRepository = Mockito.mock(FileRepository.class);
+        var userRepository = Mockito.mock(UserRepository.class);
+        var fileService = new FileService(fileRepository, userRepository);
+        var user = new User();
+        var optionalUser = Optional.of(user);
+        Optional<File> optionalFile = Optional.empty();
+
+        Mockito.when(userRepository.findUserByAuthToken(authToken)).thenReturn(optionalUser);
+        Mockito.when(fileRepository.findFileByNameAndUser(filename, user)).thenReturn(optionalFile);
+
+        Assert.assertThrows(IllegalArgumentException.class, () -> fileService.getFile(authToken, filename));
+        Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
+        Mockito.verify(fileRepository, never()).findFileByNameAndUser(filename, user);
+    }
+
+    @Test
+    public void getFile_notExistingFile_throwsNoSuchElementException_Test() {
+        var authToken = "auth-token";
+        var filename = "filename";
+        var user = new User();
+        Optional<File> optionalFile = Optional.empty();
+        var optionalUser = Optional.of(user);
+        var fileRepository = Mockito.mock(FileRepository.class);
+        var userRepository = Mockito.mock(UserRepository.class);
+        var fileService = new FileService(fileRepository, userRepository);
+
+        Mockito.when(userRepository.findUserByAuthToken(authToken)).thenReturn(optionalUser);
+        Mockito.when(fileRepository.findFileByNameAndUser(filename, user)).thenReturn(optionalFile);
+
+        Assert.assertThrows(NoSuchElementException.class, () -> fileService.getFile(authToken, filename));
+        Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
+        Mockito.verify(fileRepository, Mockito.times(1)).findFileByNameAndUser(filename, user);
+    }
+
 
 }
