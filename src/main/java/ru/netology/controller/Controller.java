@@ -1,5 +1,7 @@
 package ru.netology.controller;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -41,6 +43,11 @@ public class Controller {
     @DeleteMapping ("/file")
     public void deleteFile(@RequestHeader("auth-token") String authToken, @RequestParam String filename) throws AuthException {
         fileService.deleteFile(authToken, filename);
+    }
+
+    @GetMapping("/file")
+    public ResponseEntity<MultiValueMap<String, Object>> getFile(@RequestHeader("auth-token") String authToken, @RequestParam String filename) throws AuthException {
+        return fileService.getFile(authToken, filename);
     }
 
 }
