@@ -37,6 +37,6 @@ public class UserService {
         }
         var user = optionalUser.get();
         user.setAuthToken(null);
-        userRepository.save(user);
+        userRepository.saveAndFlush(user);
     }
 }
