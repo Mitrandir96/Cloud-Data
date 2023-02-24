@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.netology.dto.PostLoginRequest;
 import ru.netology.dto.PostLoginResponse;
+import ru.netology.dto.PutFileRequest;
 import ru.netology.service.FileService;
 import ru.netology.service.UserService;
 
@@ -14,6 +15,7 @@ import javax.security.auth.login.LoginException;
 import javax.security.auth.message.AuthException;
 import java.io.IOException;
 
+@Validated
 @RestController
 public class Controller {
 
@@ -26,7 +28,7 @@ public class Controller {
     }
 
     @PostMapping("/login")
-    public PostLoginResponse login(@RequestBody @Validated PostLoginRequest request) throws LoginException {
+    public PostLoginResponse login(@RequestBody PostLoginRequest request) throws LoginException {
         return userService.login(request.getLogin(), request.getPassword());
     }
 
@@ -40,7 +42,7 @@ public class Controller {
         fileService.uploadFile(authToken, hash, file, filename);
     }
 
-    @DeleteMapping ("/file")
+    @DeleteMapping("/file")
     public void deleteFile(@RequestHeader("auth-token") String authToken, @RequestParam String filename) throws AuthException {
         fileService.deleteFile(authToken, filename);
     }
@@ -48,6 +50,11 @@ public class Controller {
     @GetMapping("/file")
     public ResponseEntity<MultiValueMap<String, Object>> getFile(@RequestHeader("auth-token") String authToken, @RequestParam String filename) throws AuthException {
         return fileService.getFile(authToken, filename);
+    }
+
+    @PutMapping("/file")
+    public void putFile(@RequestHeader("auth-token") String authToken, @RequestParam String filename,@Validated @RequestBody PutFileRequest putFileRequest) throws AuthException {
+        fileService.renameFile(authToken, filename, putFileRequest.getName());
     }
 
 }
