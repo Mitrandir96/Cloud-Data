@@ -3,14 +3,11 @@ package ru.netology.unitTests;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartRequest;
 import ru.netology.dto.PostLoginResponse;
 import ru.netology.entities.File;
 import ru.netology.entities.User;
@@ -53,7 +50,7 @@ public class ServiceTests {
     }
 
     @Test
-    public void login_notExistingUser_throwsLoginException_Test() throws LoginException {
+    public void login_notExistingUser_throwsLoginException_Test() {
         var login = "notExistingUser";
         var password = "password";
         Optional<User> optionalUser = Optional.empty();
@@ -78,7 +75,7 @@ public class ServiceTests {
         userService.logout(authToken);
 
         Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
-        Mockito.verify(userRepository, Mockito.times(1)).save(user);
+        Mockito.verify(userRepository, Mockito.times(1)).saveAndFlush(user);
     }
 
     @Test
@@ -94,7 +91,7 @@ public class ServiceTests {
         userService.logout(authToken);
 
         Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
-        Mockito.verify(userRepository, never()).save(user);
+        Mockito.verify(userRepository, never()).saveAndFlush(user);
     }
 
     @Test
@@ -114,7 +111,8 @@ public class ServiceTests {
         fileService.uploadFile(authToken, hash, file, filename);
 
         Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
-        Mockito.verify(fileRepository, Mockito.times(1)).save(Mockito.notNull());
+        Mockito.verify(fileRepository, Mockito.times(1)).findFileByNameAndUser(filename, user);
+        Mockito.verify(fileRepository, Mockito.times(1)).saveAndFlush(Mockito.notNull());
     }
 
     @Test
@@ -124,6 +122,7 @@ public class ServiceTests {
         var hash = "hash";
         var file = Mockito.mock(MultipartFile.class);
         Optional<User> optionalUser = Optional.empty();
+        var user = Mockito.mock(User.class);
         var fileRepository = Mockito.mock(FileRepository.class);
         var userRepository = Mockito.mock(UserRepository.class);
         var fileService = new FileService(fileRepository, userRepository);
@@ -132,7 +131,8 @@ public class ServiceTests {
 
         Assert.assertThrows(AuthException.class, () -> fileService.uploadFile(authToken, hash, file, filename));
         Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
-        Mockito.verify(fileRepository, never()).save(Mockito.notNull());
+        Mockito.verify(fileRepository, never()).findFileByNameAndUser(filename, user);
+        Mockito.verify(fileRepository, never()).saveAndFlush(Mockito.notNull());
     }
 
     @Test
@@ -151,7 +151,8 @@ public class ServiceTests {
 
         Assert.assertThrows(IllegalArgumentException.class, () -> fileService.uploadFile(authToken, hash, file, filename));
         Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
-        Mockito.verify(fileRepository, never()).save(Mockito.notNull());
+        Mockito.verify(fileRepository, never()).findFileByNameAndUser(filename, user);
+        Mockito.verify(fileRepository, never()).saveAndFlush(Mockito.notNull());
     }
 
     @Test
@@ -171,11 +172,11 @@ public class ServiceTests {
 
         Assert.assertThrows(IOException.class, () -> fileService.uploadFile(authToken, hash, file, filename));
         Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
-        Mockito.verify(fileRepository, never()).save(Mockito.notNull());
+        Mockito.verify(fileRepository, never()).saveAndFlush(Mockito.notNull());
     }
 
     @Test
-    public void uploadFile_WithExistingName_throwsIllegalException_Test() {
+    public void uploadFile_withExistingName_throwsIllegalException_Test() {
         var authToken = "auth-token";
         var filename = "existingFilename";
         var hash = "hash";
@@ -193,8 +194,8 @@ public class ServiceTests {
 
         Assert.assertThrows(IllegalArgumentException.class, () -> fileService.uploadFile(authToken, hash, currentFile, filename));
         Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
-        Mockito.verify(fileRepository, never()).save(Mockito.notNull());
-        Mockito.verify(fileRepository, Mockito.times(1)).findFileByNameAndUser(filename, user);
+        Mockito.verify(fileRepository, Mockito.times(1)).findFileByNameAndUser(Mockito.notNull(), Mockito.notNull());
+        Mockito.verify(fileRepository, never()).saveAndFlush(Mockito.notNull());
     }
 
     @Test
@@ -257,7 +258,7 @@ public class ServiceTests {
     }
 
     @Test
-    public void deleteFile_EmptyFilename_throwsIllegalException_Test() {
+    public void deleteFile_emptyFilename_throwsIllegalException_Test() {
         var authToken = "auth-token";
         var filename = "";
         var user = new User();
@@ -320,7 +321,7 @@ public class ServiceTests {
     }
 
     @Test
-    public void getFile_EmptyFilename_throwsIllegalException_Test() {
+    public void getFile_emptyFilename_throwsIllegalException_Test() {
         var authToken = "auth-token";
         var filename = "";
         var fileRepository = Mockito.mock(FileRepository.class);
@@ -357,5 +358,84 @@ public class ServiceTests {
         Mockito.verify(fileRepository, Mockito.times(1)).findFileByNameAndUser(filename, user);
     }
 
+    @Test
+    public void renameFile_existingFile_returns_Test() throws AuthException {
+        var authToken = "auth-token";
+        var filename = "existingFilename";
+        var name = "newName";
+        var user = Mockito.mock(User.class);
+        var file = Mockito.mock(File.class);
+        var optionalFile = Optional.of(file);
+        var optionalUser = Optional.of(user);
+        var fileRepository = Mockito.mock(FileRepository.class);
+        var userRepository = Mockito.mock(UserRepository.class);
+        var fileService = new FileService(fileRepository, userRepository);
 
+        Mockito.when(userRepository.findUserByAuthToken(authToken)).thenReturn(optionalUser);
+        Mockito.when(fileRepository.findFileByNameAndUser(filename, user)).thenReturn(optionalFile);
+
+        fileService.renameFile(authToken, filename, name);
+
+        Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
+        Mockito.verify(fileRepository, Mockito.times(1)).findFileByNameAndUser(filename, user);
+        Mockito.verify(fileRepository, Mockito.times(1)).saveAndFlush(file);
+    }
+
+    @Test
+    public void renameFile_notExistingFile_throwsNoSuchElementException_Test() {
+        var authToken = "auth-token";
+        var filename = "filename";
+        var name = "newName";
+        var user = Mockito.mock(User.class);
+        Optional<File> optionalFile = Optional.empty();
+        var optionalUser = Optional.of(user);
+        var fileRepository = Mockito.mock(FileRepository.class);
+        var userRepository = Mockito.mock(UserRepository.class);
+        var fileService = new FileService(fileRepository, userRepository);
+
+        Mockito.when(userRepository.findUserByAuthToken(authToken)).thenReturn(optionalUser);
+        Mockito.when(fileRepository.findFileByNameAndUser(filename, user)).thenReturn(optionalFile);
+
+        Assert.assertThrows(NoSuchElementException.class, () -> fileService.renameFile(authToken, filename, name));
+        Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
+        Mockito.verify(fileRepository, Mockito.times(1)).findFileByNameAndUser(filename, user);
+        Mockito.verify(fileRepository, never()).saveAndFlush(Mockito.notNull());
+    }
+
+    @Test
+    public void renameFile_notExistingUser_throwsAuthException_Test() {
+        var authToken = "auth-token";
+        var filename = "filename";
+        var name = "newName";
+        var fileRepository = Mockito.mock(FileRepository.class);
+        var userRepository = Mockito.mock(UserRepository.class);
+        var fileService = new FileService(fileRepository, userRepository);
+        Optional<User> optionalUser = Optional.empty();
+
+        Mockito.when(userRepository.findUserByAuthToken(authToken)).thenReturn(optionalUser);
+
+        Assert.assertThrows(AuthException.class, () -> fileService.renameFile(authToken, filename, name));
+        Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
+        Mockito.verify(fileRepository, never()).findFileByNameAndUser(Mockito.notNull(), Mockito.notNull());
+        Mockito.verify(fileRepository, never()).saveAndFlush(Mockito.notNull());
+    }
+
+    @Test
+    public void renameFile_emptyFileName_throwsIllegalArgumentException_Test() {
+        var authToken = "auth-token";
+        var filename = "";
+        var name = "newName";
+        var user = Mockito.mock(User.class);
+        var optionalUser = Optional.of(user);
+        var fileRepository = Mockito.mock(FileRepository.class);
+        var userRepository = Mockito.mock(UserRepository.class);
+        var fileService = new FileService(fileRepository, userRepository);
+
+        Mockito.when(userRepository.findUserByAuthToken(authToken)).thenReturn(optionalUser);
+
+        Assert.assertThrows(IllegalArgumentException.class, () -> fileService.renameFile(authToken, filename, name));
+        Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
+        Mockito.verify(fileRepository, never()).findFileByNameAndUser(filename, user);
+        Mockito.verify(fileRepository, never()).saveAndFlush(Mockito.notNull());
+    }
 }
