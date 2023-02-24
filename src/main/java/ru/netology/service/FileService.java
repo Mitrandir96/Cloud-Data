@@ -30,7 +30,7 @@ public class FileService {
     public void uploadFile(String authToken, String hash, MultipartFile file, String filename) throws IOException, AuthException {
         var currentFile = new File();
         var optionalUser = userRepository.findUserByAuthToken(authToken);
-        if (!optionalUser.isPresent()) {
+        if (optionalUser.isEmpty()) {
             throw new AuthException("user with provided auth token not found");
         }
         var user = optionalUser.get();
@@ -65,7 +65,7 @@ public class FileService {
         } catch (IOException e) {
             throw new IOException("can't get file bytes");
         }
-        fileRepository.save(currentFile);
+        fileRepository.saveAndFlush(currentFile);
     }
 
     public void deleteFile(String authToken, String filename) throws AuthException {
@@ -109,5 +109,26 @@ public class FileService {
         formData.add("hash", file.getHash());
         formData.add("file", file.getContent());
         return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.MULTIPART_FORM_DATA).body(formData);
+    }
+
+    public void renameFile(String authToken, String filename, String name) throws AuthException {
+        var optionalUser = userRepository.findUserByAuthToken(authToken);
+        if (optionalUser.isEmpty()) {
+            throw new AuthException("user with provided auth token not found");
+        }
+        var user = optionalUser.get();
+        if (filename.isEmpty() || filename.isBlank()) {
+            throw new IllegalArgumentException("filename is empty");
+        }
+        if (filename == null) {
+            throw new IllegalArgumentException("filename can't be null");
+        }
+        var optionalFile = fileRepository.findFileByNameAndUser(filename, user);
+        if (optionalFile.isEmpty()) {
+            throw new NoSuchElementException("file with provided filename not found");
+        }
+        var file = optionalFile.get();
+        file.setName(name);
+        fileRepository.saveAndFlush(file);
     }
 }
