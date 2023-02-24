@@ -2,11 +2,8 @@ package ru.netology.service;
 
 import org.springframework.stereotype.Service;
 import ru.netology.dto.PostLoginResponse;
-import ru.netology.entities.File;
-import ru.netology.repositories.FileRepository;
 import ru.netology.repositories.UserRepository;
 import javax.security.auth.login.LoginException;
-import java.util.UUID;
 
 @Service
 public class UserService {
