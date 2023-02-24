@@ -16,6 +16,7 @@ import ru.netology.controller.exception.ExceptionHandlerAdvice;
 import ru.netology.dto.GeneralErrorResponse;
 import ru.netology.dto.PostLoginRequest;
 import ru.netology.dto.PostLoginResponse;
+import ru.netology.dto.PutFileRequest;
 import ru.netology.service.FileService;
 import ru.netology.service.UserService;
 
@@ -207,6 +208,21 @@ public class ControllerTests {
 
         Assert.assertEquals(expected, actual);
         Mockito.verify(fileService, Mockito.times(1)).getFile(authToken, filename);
+    }
+
+    @Test
+    public void putFile_existingFile_Test() throws AuthException {
+        var authToken = "auth-token";
+        var filename = "existingFilename";
+        var putFileRequest = new PutFileRequest();
+        var name = "newName";
+        putFileRequest.setName(name);
+        var fileService = Mockito.mock(FileService.class);
+        var controller = new Controller(null, fileService);
+
+        controller.putFile(authToken, filename, putFileRequest);
+
+        Mockito.verify(fileService, Mockito.times(1)).renameFile(authToken, filename, name);
     }
 
 
