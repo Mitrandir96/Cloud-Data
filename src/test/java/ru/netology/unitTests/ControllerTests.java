@@ -2,6 +2,7 @@ package ru.netology.unitTests;
 
 import com.google.gson.Gson;
 import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.http.HttpStatus;
@@ -13,17 +14,19 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.multipart.MultipartFile;
 import ru.netology.controller.Controller;
 import ru.netology.controller.exception.ExceptionHandlerAdvice;
-import ru.netology.dto.GeneralErrorResponse;
-import ru.netology.dto.PostLoginRequest;
-import ru.netology.dto.PostLoginResponse;
-import ru.netology.dto.PutFileRequest;
+import ru.netology.dto.*;
 import ru.netology.service.FileService;
 import ru.netology.service.UserService;
 
 import javax.security.auth.login.LoginException;
 import javax.security.auth.message.AuthException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 public class ControllerTests {
     @Test
@@ -41,7 +44,7 @@ public class ControllerTests {
         var expected = postLoginResponse;
         var actual = controller.login(postLoginRequest);
 
-        Assert.assertEquals(expected, actual);
+        assertEquals(expected, actual);
         Mockito.verify(userService, Mockito.times(1)).login(postLoginRequest.getLogin(), postLoginRequest.getPassword());
     }
 
@@ -58,7 +61,7 @@ public class ControllerTests {
         var expected = ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body(ex);
         var actual = exceptionHandler.onLoginError(exception);
 
-        Assert.assertEquals(expected, actual);
+        assertEquals(expected, actual);
     }
 
     @Test
@@ -79,7 +82,7 @@ public class ControllerTests {
         var expected = ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body(ex);
         var actual = exceptionHandler.onLoginValidationError(exception);
 
-        Assert.assertEquals(expected, actual);
+        assertEquals(expected, actual);
     }
 
     @Test
@@ -121,8 +124,8 @@ public class ControllerTests {
         var expected = ResponseEntity.status(status).contentType(MediaType.APPLICATION_JSON).body(ex);
         var actual = exceptionHandler.authenticationError(exception);
 
-        Assert.assertEquals(expected, actual);
-        Assert.assertSame(expected.getClass(), actual.getClass());
+        assertEquals(expected, actual);
+        assertSame(expected.getClass(), actual.getClass());
     }
 
     @Test
@@ -139,8 +142,8 @@ public class ControllerTests {
         var expected = ResponseEntity.status(status).contentType(MediaType.APPLICATION_JSON).body(ex);
         var actual = exceptionHandler.onFileValidationError(exception);
 
-        Assert.assertEquals(expected, actual);
-        Assert.assertSame(expected.getClass(), actual.getClass());
+        assertEquals(expected, actual);
+        assertSame(expected.getClass(), actual.getClass());
     }
 
     @Test
@@ -157,8 +160,8 @@ public class ControllerTests {
         var expected = ResponseEntity.status(status).contentType(MediaType.APPLICATION_JSON).body(ex);
         var actual = exceptionHandler.getFileBytesError(exception);
 
-        Assert.assertEquals(expected, actual);
-        Assert.assertSame(expected.getClass(), actual.getClass());
+        assertEquals(expected, actual);
+        assertSame(expected.getClass(), actual.getClass());
     }
 
     @Test
@@ -187,8 +190,8 @@ public class ControllerTests {
         var expected = ResponseEntity.status(status).contentType(MediaType.APPLICATION_JSON).body(ex);
         var actual = exceptionHandler.getFileFromRepository(exception);
 
-        Assert.assertEquals(expected, actual);
-        Assert.assertSame(expected.getClass(), actual.getClass());
+        assertEquals(expected, actual);
+        assertSame(expected.getClass(), actual.getClass());
     }
 
     @Test
@@ -206,7 +209,7 @@ public class ControllerTests {
         var expected = ResponseEntity.status(HttpStatus.OK).contentType(MediaType.MULTIPART_FORM_DATA).body(formData);
         var actual = controller.getFile(authToken, filename);
 
-        Assert.assertEquals(expected, actual);
+        assertEquals(expected, actual);
         Mockito.verify(fileService, Mockito.times(1)).getFile(authToken, filename);
     }
 
@@ -223,6 +226,29 @@ public class ControllerTests {
         controller.putFile(authToken, filename, putFileRequest);
 
         Mockito.verify(fileService, Mockito.times(1)).renameFile(authToken, filename, name);
+    }
+
+    @Test
+    public void getList_Test() throws AuthException {
+        var authToken = "auth-token";
+        var limit = 4;
+        var fileService = Mockito.mock(FileService.class);
+        var controller = new Controller(null, fileService);
+        var getListResponse = new GetListResponse();
+        var getListResponseItem = new GetListResponseItem();
+        getListResponseItem.setSize(2);
+        getListResponseItem.setFilename("test");
+        List<GetListResponseItem> files = new ArrayList<>();
+        files.add(getListResponseItem);
+        getListResponse.setFiles(files);
+
+        Mockito.when(fileService.getList(authToken, limit)).thenReturn(getListResponse);
+
+        var expected = getListResponse;
+        var actual = controller.getList(authToken, limit);
+
+        assertEquals(expected, actual);
+        Mockito.verify(fileService, Mockito.times(1)).getList(authToken, limit);
     }
 
 
