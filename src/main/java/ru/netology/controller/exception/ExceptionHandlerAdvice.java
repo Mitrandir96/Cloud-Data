@@ -17,7 +17,7 @@ import java.util.NoSuchElementException;
 @RestControllerAdvice
 public class ExceptionHandlerAdvice {
     @ExceptionHandler(LoginException.class)
-    public ResponseEntity<String> onLoginError (LoginException e) {
+    public ResponseEntity<String> onLoginError(LoginException e) {
         return prepareResponseEntity(e.getMessage(), 1, HttpStatus.BAD_REQUEST);
     }
 

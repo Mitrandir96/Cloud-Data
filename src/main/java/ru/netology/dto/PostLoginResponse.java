@@ -3,7 +3,6 @@ package ru.netology.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class PostLoginResponse {
-
     private String authToken;
 
     @JsonProperty("auth-token")
