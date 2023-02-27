@@ -1,5 +1,6 @@
 package ru.netology.service;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -7,12 +8,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
+import ru.netology.dto.GetListResponse;
+import ru.netology.dto.GetListResponseItem;
 import ru.netology.entities.File;
 import ru.netology.repositories.FileRepository;
 import ru.netology.repositories.UserRepository;
 
 import javax.security.auth.message.AuthException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -130,5 +135,29 @@ public class FileService {
         var file = optionalFile.get();
         file.setName(name);
         fileRepository.saveAndFlush(file);
+    }
+
+    public GetListResponse getList(String authToken, Integer limit) throws AuthException {
+        var optionalUser = userRepository.findUserByAuthToken(authToken);
+        if (optionalUser.isEmpty()) {
+            throw new AuthException("user with provided auth token not found");
+        }
+        var user = optionalUser.get();
+        if (limit <= 0 || limit == null) {
+            throw new IllegalArgumentException("limit can't be less than or equals 0 or be null");
+        }
+        var files = fileRepository.findAllByUser(user, PageRequest.of(0, limit));
+        List<GetListResponseItem> filesList = new ArrayList<>();
+        for (File file : files) {
+            var getListResponseItem = new GetListResponseItem();
+            var filename = file.getName();
+            var size = file.getContent().length;
+            getListResponseItem.setFilename(filename);
+            getListResponseItem.setSize(size);
+            filesList.add(getListResponseItem);
+        }
+        var response = new GetListResponse();
+        response.setFiles(filesList);
+        return response;
     }
 }
