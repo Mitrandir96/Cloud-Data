@@ -5,6 +5,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import ru.netology.dto.GetListResponse;
 import ru.netology.dto.PostLoginRequest;
 import ru.netology.dto.PostLoginResponse;
 import ru.netology.dto.PutFileRequest;
@@ -15,7 +16,6 @@ import javax.security.auth.login.LoginException;
 import javax.security.auth.message.AuthException;
 import java.io.IOException;
 
-@Validated
 @RestController
 public class Controller {
 
@@ -53,8 +53,13 @@ public class Controller {
     }
 
     @PutMapping("/file")
-    public void putFile(@RequestHeader("auth-token") String authToken, @RequestParam String filename,@Validated @RequestBody PutFileRequest putFileRequest) throws AuthException {
+    public void putFile(@RequestHeader("auth-token") String authToken, @RequestParam String filename, @Validated @RequestBody PutFileRequest putFileRequest) throws AuthException {
         fileService.renameFile(authToken, filename, putFileRequest.getName());
+    }
+
+    @GetMapping("/list")
+    public GetListResponse getList(@RequestHeader("auth-token") String authToken, @RequestParam Integer limit) throws AuthException {
+        return fileService.getList(authToken, limit);
     }
 
 }
