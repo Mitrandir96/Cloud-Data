@@ -3,11 +3,16 @@ package ru.netology.unitTests;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.multipart.MultipartFile;
+import ru.netology.dto.GetListResponse;
+import ru.netology.dto.GetListResponseItem;
 import ru.netology.dto.PostLoginResponse;
 import ru.netology.entities.File;
 import ru.netology.entities.User;
@@ -19,6 +24,8 @@ import ru.netology.service.UserService;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.message.AuthException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -389,7 +396,7 @@ public class ServiceTests {
         var authToken = "auth-token";
         var filename = "filename";
         var name = "newName";
-        var user = Mockito.mock(User.class);
+        var user = new User();
         Optional<File> optionalFile = Optional.empty();
         var optionalUser = Optional.of(user);
         var fileRepository = Mockito.mock(FileRepository.class);
@@ -428,7 +435,7 @@ public class ServiceTests {
         var authToken = "auth-token";
         var filename = "";
         var name = "newName";
-        var user = Mockito.mock(User.class);
+        var user = new User();
         var optionalUser = Optional.of(user);
         var fileRepository = Mockito.mock(FileRepository.class);
         var userRepository = Mockito.mock(UserRepository.class);
@@ -440,5 +447,64 @@ public class ServiceTests {
         Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
         Mockito.verify(fileRepository, never()).findFileByNameAndUser(filename, user);
         Mockito.verify(fileRepository, never()).saveAndFlush(Mockito.notNull());
+    }
+
+    @Test
+    public void getList_validArguments_returnsResponse_Test() throws AuthException {
+        var authToken = "auth-token";
+        var limit = 4;
+        var user = new User();
+        var optionalUser = Optional.of(user);
+        var fileRepository = Mockito.mock(FileRepository.class);
+        var userRepository = Mockito.mock(UserRepository.class);
+        var fileService = new FileService(fileRepository, userRepository);
+        List<File> files = new ArrayList<>();
+        List<GetListResponseItem> list = new ArrayList<>();
+        var response = new GetListResponse();
+        response.setFiles(list);
+
+        Mockito.when(userRepository.findUserByAuthToken(authToken)).thenReturn(optionalUser);
+        Mockito.when(fileRepository.findAllByUser(user, PageRequest.of(0, limit))).thenReturn(files);
+
+        var expected = response;
+        var actual = fileService.getList(authToken, limit);
+
+        assertSame(expected.getClass(), actual.getClass());
+        assertEquals(expected.getFiles(), actual.getFiles());
+        Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
+        Mockito.verify(fileRepository, Mockito.times(1)).findAllByUser(user, PageRequest.of(0, limit));
+    }
+
+    @Test
+    public void getList_notExistingUser_throwsAuthException_Test() {
+        var authToken = "auth-token";
+        var limit = 4;
+        var fileRepository = Mockito.mock(FileRepository.class);
+        var userRepository = Mockito.mock(UserRepository.class);
+        var fileService = new FileService(fileRepository, userRepository);
+        Optional<User> optionalUser = Optional.empty();
+
+        Mockito.when(userRepository.findUserByAuthToken(authToken)).thenReturn(optionalUser);
+
+        assertThrows(AuthException.class, () -> fileService.getList(authToken, limit));
+        Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
+        Mockito.verify(fileRepository, never()).findAllByUser(Mockito.notNull(), Mockito.notNull());
+    }
+
+    @Test
+    public void getList_notValidLimit_throwsIllegalException_Test() {
+        var authToken = "auth-token";
+        var limit = 0;
+        var user = new User();
+        var optionalUser = Optional.of(user);
+        var fileRepository = Mockito.mock(FileRepository.class);
+        var userRepository = Mockito.mock(UserRepository.class);
+        var fileService = new FileService(fileRepository, userRepository);
+
+        Mockito.when(userRepository.findUserByAuthToken(authToken)).thenReturn(optionalUser);
+
+        assertThrows(IllegalArgumentException.class, () -> fileService.getList(authToken, limit));
+        Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
+        Mockito.verify(fileRepository, never()).findAllByUser(Mockito.notNull(), Mockito.notNull());
     }
 }
