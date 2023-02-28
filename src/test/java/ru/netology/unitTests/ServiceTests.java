@@ -156,7 +156,7 @@ public class ServiceTests {
         Mockito.when(userRepository.findUserByAuthToken(authToken)).thenReturn(optionalUser);
 
         assertThrows(IllegalArgumentException.class, () -> fileService.uploadFile(authToken, hash, file, filename));
-        Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
+        Mockito.verify(userRepository, never()).findUserByAuthToken(authToken);
         Mockito.verify(fileRepository, never()).findFileByNameAndUser(filename, user);
         Mockito.verify(fileRepository, never()).saveAndFlush(Mockito.notNull());
     }
@@ -278,7 +278,7 @@ public class ServiceTests {
         Mockito.when(fileRepository.findFileByNameAndUser(filename, user)).thenReturn(optionalFile);
 
         assertThrows(IllegalArgumentException.class, () -> fileService.deleteFile(authToken, filename));
-        Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
+        Mockito.verify(userRepository, never()).findUserByAuthToken(authToken);
         Mockito.verify(fileRepository, never()).findFileByNameAndUser(filename, user);
         Mockito.verify(fileRepository, never()).delete(Mockito.notNull());
     }
@@ -341,7 +341,7 @@ public class ServiceTests {
         Mockito.when(fileRepository.findFileByNameAndUser(filename, user)).thenReturn(optionalFile);
 
         assertThrows(IllegalArgumentException.class, () -> fileService.getFile(authToken, filename));
-        Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
+        Mockito.verify(userRepository, never()).findUserByAuthToken(authToken);
         Mockito.verify(fileRepository, never()).findFileByNameAndUser(filename, user);
     }
 
@@ -442,7 +442,7 @@ public class ServiceTests {
         Mockito.when(userRepository.findUserByAuthToken(authToken)).thenReturn(optionalUser);
 
         assertThrows(IllegalArgumentException.class, () -> fileService.renameFile(authToken, filename, name));
-        Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
+        Mockito.verify(userRepository, never()).findUserByAuthToken(authToken);
         Mockito.verify(fileRepository, never()).findFileByNameAndUser(filename, user);
         Mockito.verify(fileRepository, never()).saveAndFlush(Mockito.notNull());
     }
@@ -502,7 +502,7 @@ public class ServiceTests {
         Mockito.when(userRepository.findUserByAuthToken(authToken)).thenReturn(optionalUser);
 
         assertThrows(IllegalArgumentException.class, () -> fileService.getList(authToken, limit));
-        Mockito.verify(userRepository, Mockito.times(1)).findUserByAuthToken(authToken);
+        Mockito.verify(userRepository, never()).findUserByAuthToken(authToken);
         Mockito.verify(fileRepository, never()).findAllByUser(Mockito.notNull(), Mockito.notNull());
     }
 }
