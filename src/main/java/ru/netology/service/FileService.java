@@ -11,15 +11,13 @@ import org.springframework.web.multipart.MultipartFile;
 import ru.netology.dto.GetListResponse;
 import ru.netology.dto.GetListResponseItem;
 import ru.netology.entities.File;
+import ru.netology.entities.User;
 import ru.netology.repositories.FileRepository;
 import ru.netology.repositories.UserRepository;
 
 import javax.security.auth.message.AuthException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class FileService {
@@ -33,38 +31,32 @@ public class FileService {
     }
 
     public void uploadFile(String authToken, String hash, MultipartFile file, String filename) throws IOException, AuthException {
-        var currentFile = new File();
-        var optionalUser = userRepository.findUserByAuthToken(authToken);
-        if (optionalUser.isEmpty()) {
-            throw new AuthException("user with provided auth token not found");
-        }
-        var user = optionalUser.get();
-        currentFile.setUser(user);
-        currentFile.setId(UUID.randomUUID());
-        if (hash.isEmpty() || hash.isBlank()) {
-            throw new IllegalArgumentException("hash can't be empty");
-        }
         if (hash == null) {
             throw new IllegalArgumentException("hash can't be null");
         }
-        currentFile.setHash(hash);
+        checkFilenameIsNull(filename);
+        if (file == null) {
+            throw new IllegalArgumentException("file can't be null");
+        }
+        if (hash.isEmpty() || hash.isBlank()) {
+            throw new IllegalArgumentException("hash can't be empty");
+        }
         if (filename.isEmpty() || filename.isBlank()) {
             throw new IllegalArgumentException("filename is empty");
         }
-        if (filename == null) {
-            throw new IllegalArgumentException("filename can't be null");
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("file can't be empty");
         }
+        var user = checkUserExistence(authToken);
+        var currentFile = new File();
+        currentFile.setUser(user);
+        currentFile.setId(UUID.randomUUID());
+        currentFile.setHash(hash);
         var optionalFile = fileRepository.findFileByNameAndUser(filename, user);
         if (optionalFile.isPresent()) {
             throw new IllegalArgumentException("file with provided filename already exists");
         }
         currentFile.setName(filename);
-        if (file == null) {
-            throw new IllegalArgumentException("file can't be null");
-        }
-        if (file.isEmpty()) {
-            throw new IllegalArgumentException("file can't be empty");
-        }
         try {
             currentFile.setContent(file.getBytes());
         } catch (IOException e) {
@@ -74,42 +66,22 @@ public class FileService {
     }
 
     public void deleteFile(String authToken, String filename) throws AuthException {
-        var optionalUser = userRepository.findUserByAuthToken(authToken);
-        if (optionalUser.isEmpty()) {
-            throw new AuthException("user with provided auth token not found");
-        }
-        var user = optionalUser.get();
+        checkFilenameIsNull(filename);
         if (filename.isEmpty() || filename.isBlank()) {
             throw new IllegalArgumentException("filename is empty");
         }
-        if (filename == null) {
-            throw new IllegalArgumentException("filename can't be null");
-        }
-        var optionalFile = fileRepository.findFileByNameAndUser(filename, user);
-        if (optionalFile.isEmpty()) {
-            throw new NoSuchElementException("file with provided filename not found");
-        }
-        var file = optionalFile.get();
+        var user = checkUserExistence(authToken);
+        var file = checkFileExistence(filename, user);
         fileRepository.delete(file);
     }
 
     public ResponseEntity<MultiValueMap<String, Object>> getFile(String authToken, String filename) throws AuthException {
-        var optionalUser = userRepository.findUserByAuthToken(authToken);
-        if (optionalUser.isEmpty()) {
-            throw new AuthException("user with provided auth token not found");
-        }
-        var user = optionalUser.get();
+        checkFilenameIsNull(filename);
         if (filename.isEmpty() || filename.isBlank()) {
             throw new IllegalArgumentException("filename is empty");
         }
-        if (filename == null) {
-            throw new IllegalArgumentException("filename can't be null");
-        }
-        var optionalFile = fileRepository.findFileByNameAndUser(filename, user);
-        if (optionalFile.isEmpty()) {
-            throw new NoSuchElementException("file with provided filename not found");
-        }
-        var file = optionalFile.get();
+        var user = checkUserExistence(authToken);
+        var file = checkFileExistence(filename, user);
         var formData = new LinkedMultiValueMap<String, Object>();
         formData.add("hash", file.getHash());
         formData.add("file", file.getContent());
@@ -117,35 +89,21 @@ public class FileService {
     }
 
     public void renameFile(String authToken, String filename, String name) throws AuthException {
-        var optionalUser = userRepository.findUserByAuthToken(authToken);
-        if (optionalUser.isEmpty()) {
-            throw new AuthException("user with provided auth token not found");
-        }
-        var user = optionalUser.get();
+        checkFilenameIsNull(filename);
         if (filename.isEmpty() || filename.isBlank()) {
             throw new IllegalArgumentException("filename is empty");
         }
-        if (filename == null) {
-            throw new IllegalArgumentException("filename can't be null");
-        }
-        var optionalFile = fileRepository.findFileByNameAndUser(filename, user);
-        if (optionalFile.isEmpty()) {
-            throw new NoSuchElementException("file with provided filename not found");
-        }
-        var file = optionalFile.get();
+        var user = checkUserExistence(authToken);
+        var file = checkFileExistence(filename, user);
         file.setName(name);
         fileRepository.saveAndFlush(file);
     }
 
     public GetListResponse getList(String authToken, Integer limit) throws AuthException {
-        var optionalUser = userRepository.findUserByAuthToken(authToken);
-        if (optionalUser.isEmpty()) {
-            throw new AuthException("user with provided auth token not found");
-        }
-        var user = optionalUser.get();
-        if (limit <= 0 || limit == null) {
+        if (limit == null || limit <= 0) {
             throw new IllegalArgumentException("limit can't be less than or equals 0 or be null");
         }
+        var user = checkUserExistence(authToken);
         var files = fileRepository.findAllByUser(user, PageRequest.of(0, limit));
         List<GetListResponseItem> filesList = new ArrayList<>();
         for (File file : files) {
@@ -159,5 +117,27 @@ public class FileService {
         var response = new GetListResponse();
         response.setFiles(filesList);
         return response;
+    }
+
+    public User checkUserExistence(String authToken) throws AuthException {
+        var optionalUser = userRepository.findUserByAuthToken(authToken);
+        if (optionalUser.isEmpty()) {
+            throw new AuthException("user with provided auth token not found");
+        }
+        return optionalUser.get();
+    }
+
+    public File checkFileExistence(String filename, User user) {
+        var optionalFile = fileRepository.findFileByNameAndUser(filename, user);
+        if (optionalFile.isEmpty()) {
+            throw new NoSuchElementException("file with provided filename not found");
+        }
+        return optionalFile.get();
+    }
+
+    public void checkFilenameIsNull(String filename) {
+        if (filename == null) {
+            throw new IllegalArgumentException("filename can't be null");
+        }
     }
 }
