@@ -5,6 +5,7 @@ import ru.netology.dto.PostLoginResponse;
 import ru.netology.repositories.UserRepository;
 
 import javax.security.auth.login.LoginException;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -21,7 +22,11 @@ public class UserService {
             throw new LoginException("login and/or password is incorrect");
         }
         var user = optionalUser.get();
-        user.setAuthToken("123");
+        var token = UUID.randomUUID().toString();
+        while (userRepository.findUserByAuthToken(token).isPresent()) {
+            token = UUID.randomUUID().toString();
+        }
+        user.setAuthToken(token);
         userRepository.save(user);
         var postLoginResponse = new PostLoginResponse();
         postLoginResponse.setAuthToken(user.getAuthToken());
