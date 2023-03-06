@@ -16,6 +16,7 @@ import javax.security.auth.login.LoginException;
 import javax.security.auth.message.AuthException;
 import java.io.IOException;
 
+@RequestMapping("/cloud")
 @RestController
 public class Controller {
 

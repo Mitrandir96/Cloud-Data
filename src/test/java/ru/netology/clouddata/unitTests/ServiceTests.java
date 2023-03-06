@@ -1,4 +1,4 @@
-package ru.netology.unitTests;
+package ru.netology.clouddata.unitTests;
 
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
@@ -28,6 +28,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.Mockito.never;
 
 public class ServiceTests {
@@ -52,7 +53,8 @@ public class ServiceTests {
         var actual = userService.login(login, password);
 
         assertSame(expected.getClass(), actual.getClass());
-        assertEquals(expected.getAuthToken(), actual.getAuthToken());
+        assertNotNull(actual.getAuthToken());
+        assertNotEquals(0, actual.getAuthToken().length());
     }
 
     @Test

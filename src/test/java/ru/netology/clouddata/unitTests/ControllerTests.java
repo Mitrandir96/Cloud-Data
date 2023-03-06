@@ -1,8 +1,6 @@
-package ru.netology.unitTests;
+package ru.netology.clouddata.unitTests;
 
 import com.google.gson.Gson;
-import org.junit.Assert;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.http.HttpStatus;
