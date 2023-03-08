@@ -27,14 +27,14 @@ public class UserService {
             token = UUID.randomUUID().toString();
         }
         user.setAuthToken(token);
-        userRepository.save(user);
+        userRepository.saveAndFlush(user);
         var postLoginResponse = new PostLoginResponse();
         postLoginResponse.setAuthToken(user.getAuthToken());
         return postLoginResponse;
     }
 
     public void logout(String authToken) {
-        var optionalUser = userRepository.findUserByAuthToken(authToken);
+        var optionalUser = userRepository.findUserByAuthToken(authToken.split(" ")[1]);
         if (optionalUser.isEmpty()) {
             return;
         }

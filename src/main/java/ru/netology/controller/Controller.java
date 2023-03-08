@@ -16,7 +16,6 @@ import javax.security.auth.login.LoginException;
 import javax.security.auth.message.AuthException;
 import java.io.IOException;
 
-@RequestMapping("/cloud")
 @RestController
 public class Controller {
 
@@ -28,36 +27,45 @@ public class Controller {
         this.fileService = fileService;
     }
 
+    @CrossOrigin(origins = "http://localhost:8080", allowCredentials = "true")
     @PostMapping("/login")
     public PostLoginResponse login(@RequestBody PostLoginRequest request) throws LoginException {
+        System.out.println(request.getLogin());
+        System.out.println(request.getPassword());
         return userService.login(request.getLogin(), request.getPassword());
     }
 
+    @CrossOrigin(origins = "http://localhost:8080", allowCredentials = "true")
     @PostMapping("/logout")
     public void logout(@RequestHeader("auth-token") String authToken) {
         userService.logout(authToken);
     }
 
+    @CrossOrigin(origins = "http://localhost:8080", allowCredentials = "true")
     @PostMapping("/file")
     public void uploadFile(@RequestHeader("auth-token") String authToken, @RequestPart String hash, @RequestPart MultipartFile file, @RequestParam String filename) throws AuthException, IOException {
         fileService.uploadFile(authToken, hash, file, filename);
     }
 
+    @CrossOrigin(origins = "http://localhost:8080", allowCredentials = "true")
     @DeleteMapping("/file")
     public void deleteFile(@RequestHeader("auth-token") String authToken, @RequestParam String filename) throws AuthException {
         fileService.deleteFile(authToken, filename);
     }
 
+    @CrossOrigin(origins = "http://localhost:8080", allowCredentials = "true")
     @GetMapping("/file")
     public ResponseEntity<MultiValueMap<String, Object>> getFile(@RequestHeader("auth-token") String authToken, @RequestParam String filename) throws AuthException {
         return fileService.getFile(authToken, filename);
     }
 
+    @CrossOrigin(origins = "http://localhost:8080", allowCredentials = "true")
     @PutMapping("/file")
     public void putFile(@RequestHeader("auth-token") String authToken, @RequestParam String filename, @Validated @RequestBody PutFileRequest putFileRequest) throws AuthException {
         fileService.renameFile(authToken, filename, putFileRequest.getName());
     }
 
+    @CrossOrigin(origins = "http://localhost:8080", allowCredentials = "true")
     @GetMapping("/list")
     public GetListResponse getList(@RequestHeader("auth-token") String authToken, @RequestParam Integer limit) throws AuthException {
         return fileService.getList(authToken, limit);

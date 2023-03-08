@@ -120,7 +120,7 @@ public class FileService {
     }
 
     public User checkUserExistence(String authToken) throws AuthException {
-        var optionalUser = userRepository.findUserByAuthToken(authToken);
+        var optionalUser = userRepository.findUserByAuthToken(authToken.split(" ")[1]);
         if (optionalUser.isEmpty()) {
             throw new AuthException("user with provided auth token not found");
         }
